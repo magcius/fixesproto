@@ -48,7 +48,7 @@
 #define _XFIXESWIRE_H_
 
 #define XFIXES_NAME	"XFIXES"
-#define XFIXES_MAJOR	5
+#define XFIXES_MAJOR	6
 #define XFIXES_MINOR	0
 
 /*************** Version 1 ******************/
@@ -89,8 +89,11 @@
 /*************** Version 5 ******************/
 #define X_XFixesCreatePointerBarrier	    31
 #define X_XFixesDestroyPointerBarrier	    32
+/*************** Version 6 ******************/
+#define X_XFixesSelectBarrierInput          33
+#define X_XFixesBarrierReleasePointer       34
 
-#define XFixesNumberRequests		    (X_XFixesDestroyPointerBarrier+1)
+#define XFixesNumberRequests		    (X_XFixesBarrierReleasePointer+1)
 
 /* Selection events share one event number */
 #define XFixesSelectionNotify		    0
@@ -135,5 +138,15 @@
 #define BarrierPositiveY		    (1L << 1)
 #define BarrierNegativeX		    (1L << 2)
 #define BarrierNegativeY		    (1L << 3)
+
+/*************** Version 6 ******************/
+
+#define XFixesBarrierNotify                 0
+
+#define XFixesBarrierHitNotify			0
+#define XFixesBarrierPointerReleasedNotify	1
+
+#define XFixesBarrierHitNotifyMask			(1L << 0)
+#define XFixesBarrierPointerReleasedNotifyMask		(1L << 1)
 
 #endif	/* _XFIXESWIRE_H_ */

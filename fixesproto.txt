@@ -1,5 +1,5 @@
                         The XFIXES Extension
-			    Version 5.0
+			    Version 6.0
 			 Document Revision 1
 			     2010-11-15
 			    Keith Packard
@@ -28,6 +28,8 @@ developers, in particular,
  +	Fredrik Höglund for cursor names
 
  +	Deron Johnson for cursor visibility
+
+ +	Chris Halse Rogers for his work on pointer barrier notify events
 
 3. Basic Premise
 
@@ -649,6 +651,110 @@ DestroyPointerBarrier
 	Destroys the named barrier.
 
 	Errors: Barrier 
+
+************* XFIXES VERSION 6 OR BETTER ***********
+
+13. Pointer Barriers Expansion
+
+This update extends pointer barriers to receive events when the pointer hits
+them, and allows clients to temporarily "release" the barrier to allow cursor
+movement to pass through.
+
+13.1 Types
+
+	BarrierEvent:			{Hit, PointerReleased}
+	BarrierEventID:			CARD32
+
+13.2 Events
+
+BarrierNotify
+
+		type:			BYTE
+		extension:		CARD8
+		sequenceNumber:		CARD16
+		length:			CARD32
+		evtype:			CARD16
+		window:			WINDOW
+		deviceid:		DEVICEID
+		x, y:			INT16
+		dx, dy:			FP3232
+		raw-dx, raw-dy:		FP3232
+		dt:			INT16
+		event-type:             BarrierEvent
+		event-id:               BarrierEventID
+		barrier:                Barrier
+		timestamp:		Time
+
+	BarrierNotify uses the X Generic Event extension.  Type is thus always
+	GenericEvent (35), extension is the major opcode of this extension,
+	sequenceNumber is the low 16 bits of the request sequence number,
+	length is how much bigger than 32 bytes the event is, in units of 4
+	bytes. As this structure is a constant 68 bytes long, this should
+	always be 9 ((68 - 32) / 4), and as there was no corresponding request,
+	sequenceNumber should always be 0. Evtype is the type of this event,
+	which is always BarrierNotify (0).
+
+	(x, y) contain the coordinates of the pointer after restriction by
+	any applicable barriers or server-side clamping (such as to screen
+	edges).
+
+	(dx, dy) and (raw-dx, raw-dy) are the valuators for the input event
+	which caused the BarrierNotify to be emitted, before any clamping
+	(such as to the screen edge, or by a barrier) is applied.
+	(dx, dy) are the values after acceleration, (raw-dx, raw-dy) are the
+	raw values before any acceleration is applied. dt is the server time
+	in milliseconds since the last barrier event sent to this client,
+        and deviceid is the id of the input device which triggered the barrier.
+
+	barrier is the ID of the barrier hit.
+
+	type indicates the trigger of the event:
+	 Hit when the barrier has prevented pointer movement.
+	 PointerReleased when the barrier would have blocked motion but
+	has been rendered permeable by a BarrierReleasePointer request.
+
+	event-id is an identifier for this barrier event. A barrier event
+	begins when the pointer is first restricted by the barrier and remains
+	valid until the first input event from deviceid which is not
+	restricted by the barrier. The event-id is unique per-barrier.
+
+	Since a barrier event is associated with a deviceid there can be more
+	than one event active for a given barrier simultaneously.
+
+13.3 Requests
+
+SelectBarrierInput
+
+		barrier:                BARRIER
+                window:                 WINDOW
+		event-mask:		SETofBarrierEvent
+
+	This request activates barrier events for the barrier BARRIER
+        with the event specified in event-mask. The events are redirected
+        to the window specified in the input request.
+
+BarrierReleasePointer
+
+		barriers:		LISTof{ BARRIER,
+						BarrierEventID}
+
+	Temporarily allow the pointer to pass through a set of pointer
+	barriers. For each barrier in barriers this allows the pointer to pass
+	through for as long as the corresponding event-id is valid.
+
+	A single barrier may appear in barriers more than once with a
+	different associated event-id each time. In this way a client can
+	release a barrier for multiple input devices in one request.
+
+	If a requested event-id is not current for its associated barrier
+	then that, and only that, part of the request is silently ignored.
+
+	If the same (barrier, event-id) pair appears more than once in
+	barriers then the request behaves as if that pair appeared exactly
+	once.
+
+	Errors: Barrier
+
 
 99. Future compatibility
 

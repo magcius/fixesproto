@@ -532,6 +532,60 @@ typedef struct {
 
 #define sz_xXFixesDestroyPointerBarrierReq 8
 
+/*************** Version 6.0 ******************/
+
+/** Fixed point 32.32 */
+typedef struct {
+    int32_t     integral;
+    uint32_t    frac;
+} XFixesFP3232;
+
+#define BarrierEventID CARD32
+
+typedef struct
+{
+    CARD8     type;                   /* Always GenericEvent */
+    CARD8     extension;              /* XFIXES extension offset */
+    CARD16    sequenceNumber B16;     /* Always 0 */
+    CARD32    length B32;             /* Always 9 */
+    CARD16    evtype B16;             /* Always BarrierNotify  */
+    Window    window B32;
+    INT16     deviceid B16;
+    INT16     x B16;
+    INT16     y B16;
+    XFixesFP3232    dx;
+    XFixesFP3232    dy;
+    XFixesFP3232    raw_dx;
+    XFixesFP3232    raw_dy;
+    INT16     dt B16;
+    CARD16    event_type B16;
+    CARD32    event_id B32;
+    Barrier   barrier B32;
+    Time      timestamp B32;
+} xXFixesBarrierNotifyEvent;
+
+typedef struct {
+    CARD8   reqType;
+    CARD8   xfixesReqType;
+    CARD16  length B16;
+    Barrier barrier B32;
+    Window  window B32;
+    CARD32  eventMask B32;
+} xXFixesSelectBarrierInputReq;
+
+#define sz_xXFixesSelectBarrierInputReq	16
+
+typedef struct {
+    CARD8   reqType;
+    CARD8   xfixesReqType;
+    CARD16  length B16;
+    CARD16  num_barriers B16;
+    /* array of BARRIER, BarrierEventID */
+} xXFixesBarrierReleasePointerReq;
+
+#define sz_xXFixesBarrierReleasePointerReq 6
+
+#undef BarrierEventID
 #undef Barrier
 #undef Region
 #undef Picture
